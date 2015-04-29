@@ -5,10 +5,14 @@ import java.util.List;
 
 
 
+
+
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+
 
 import es.ucm.abd.practica2.model.Contiene;
 import es.ucm.abd.practica2.model.Crucigrama;
@@ -80,20 +84,64 @@ public class CrosswordDAO implements AbstractCrosswordDAO<Crucigrama, Definicion
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Definicion> findWordsByTags(String[] tags) {
-		/*List<Definicion> result;
+		List <Definicion> result = new ArrayList<Definicion>();
 		Session session = SF.openSession();
-		Query query = session.createQuery("FROM definicion AS a WHERE a. like %:stri%");
-		query.setString("stri", str);*/
-		
-		return null;
+		String cadenaWhere="";
+		Query query;
+		if (tags.length==0){
+			 query = session.createQuery("FROM Definicion");
+			//result = (List<Definicion>) query.list();
+		}
+		else {
+			/*for(int i =0;i<tags.length;i++){
+				Query query = session.createQuery("FROM Definicion AS a  WHERE :nombre Member of a.etiquetas");			
+				query.setString("nombre",tags[i]);
+				result = (List<Definicion>) query.list(); //comparacion de n listas
+			}*/
+			for(int i =0;i<tags.length;i++){
+				if (i==0)
+					cadenaWhere += "'"+tags[i]+"'"+" Member of a.etiquetas ";
+				else
+					cadenaWhere += " AND ('"+tags[i]+"' Member of a.etiquetas ) ";
+			}
+			query = session.createQuery(" FROM Definicion AS a WHERE "+cadenaWhere);
+			
+		}
+		result = (List<Definicion>) query.list(); //comparacion de n listas
+		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Definicion> getMatchingWords(CharConstraint[] constraints) {
-		// TODO Auto-generated method stub
-		return null;
+		List <Definicion> result = new ArrayList<Definicion>();
+		Session session = SF.openSession();
+		String cadenawhere="";
+		Query query ;
+		if (constraints.length==0){
+			query = session.createQuery("FROM Definicion");
+		}
+		else{
+			for(int i =0;i<constraints.length;i++){
+				int pos = constraints[i].getPosition();
+				char car = constraints[i].getCharacter();
+				if(i==0)
+					cadenawhere += "SUBSTRING(a.respuesta ,"+pos +", 1) = '"+car+"'";
+				else {
+					cadenawhere += " AND (SUBSTRING(a.respuesta ,"+ pos +", 1) = '"+car+"' "
+							+ "OR LENGTH(a.respuesta) != "+(pos-1)+")";
+				}
+			
+			}
+			query = session.createQuery("FROM Definicion AS a WHERE "+cadenawhere);
+			//query.setString("cadena",cadenawhere);
+		}
+		result = (List<Definicion>) query.list();
+		
+		return result;
 	}
 
 }
